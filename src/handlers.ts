@@ -6,6 +6,7 @@ import {
   INITIATIVE_REF_REGEX,
   GOAL_REF_REGEX,
   REQUIREMENT_REF_REGEX,
+  RELEASE_REF_REGEX,
   NOTE_REF_REGEX,
   IDEA_REF_REGEX,
   Record,
@@ -25,6 +26,17 @@ import {
   EpicFeaturesListResponse,
   WorkflowStatusesListResponse,
   InitiativeDetailResponse,
+  ReleasesListResponse,
+  ReleaseNode,
+  CreateFeaturePayload,
+  UpdateFeaturePayload,
+  DeleteFeaturePayload,
+  CreateEpicPayload,
+  UpdateEpicPayload,
+  DeleteEpicPayload,
+  CreateRequirementPayload,
+  UpdateRequirementPayload,
+  DeleteRequirementPayload,
 } from "./types.js";
 import {
   getFeatureQuery,
@@ -40,6 +52,16 @@ import {
   listFeaturesForEpicQuery,
   listWorkflowStatusesQuery,
   getInitiativeDetailQuery,
+  listReleasesQuery,
+  createFeatureMutation,
+  updateFeatureMutation,
+  deleteFeatureMutation,
+  createEpicMutation,
+  updateEpicMutation,
+  deleteEpicMutation,
+  createRequirementMutation,
+  updateRequirementMutation,
+  deleteRequirementMutation,
 } from "./queries.js";
 
 export class Handlers {
@@ -591,6 +613,470 @@ export class Handlers {
         ErrorCode.InternalError,
         `Failed to fetch initiative: ${errorMessage}`
       );
+    }
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /** Resolve a release reference (e.g. ZS-R-4) to its numeric ID. */
+  private async resolveReleaseId(releaseReference: string): Promise<string> {
+    if (!RELEASE_REF_REGEX.test(releaseReference)) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Invalid release reference format. Expected PREFIX-R-NUM (e.g., ZS-R-4). Use list_releases to find valid releases.`
+      );
+    }
+    const prefix = releaseReference.split("-R-")[0];
+    const data = await this.client.request<ReleasesListResponse>(
+      listReleasesQuery,
+      { workspaceId: prefix, page: 1 }
+    );
+    // May span multiple pages; scan until found (releases are typically < 100)
+    let found: ReleaseNode | undefined;
+    let response = data.releases;
+    while (true) {
+      found = response.nodes.find((r) => r.referenceNum === releaseReference);
+      if (found || response.isLastPage) break;
+      const next = await this.client.request<ReleasesListResponse>(
+        listReleasesQuery,
+        { workspaceId: prefix, page: response.currentPage + 1 }
+      );
+      response = next.releases;
+    }
+    if (!found) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Release ${releaseReference} not found. Use list_releases to see valid releases.`
+      );
+    }
+    return found.id;
+  }
+
+  /** Resolve a workspace prefix from an epic reference (e.g. ZS-E-28 → ZS). */
+  private workspaceFromEpic(epicRef: string): string {
+    return epicRef.split("-E-")[0];
+  }
+
+  /** Extract mutation errors as a formatted string, or null if none. */
+  private formatMutationErrors(errors: { attributes: { name: string; messages: string[] }[] }): string | null {
+    if (!errors?.attributes?.length) return null;
+    return errors.attributes
+      .map((e) => `${e.name}: ${e.messages.join(", ")}`)
+      .join("; ");
+  }
+
+  // ── list_releases ──────────────────────────────────────────────────────────
+
+  async handleListReleases(request: any) {
+    const { workspaceId, page } = request.params.arguments as {
+      workspaceId: string;
+      page?: number;
+    };
+
+    if (!workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, "workspaceId is required");
+    }
+
+    try {
+      const data = await this.client.request<ReleasesListResponse>(
+        listReleasesQuery,
+        { workspaceId, page }
+      );
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.releases, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to list releases: ${msg}`);
+    }
+  }
+
+  // ── create_feature ─────────────────────────────────────────────────────────
+
+  async handleCreateFeature(request: any) {
+    const {
+      name,
+      release_reference,
+      workspace_id,
+      epic_reference,
+      description,
+      workflow_status,
+      assigned_to_user_email,
+      tag_list,
+      due_date,
+    } = request.params.arguments as {
+      name: string;
+      release_reference: string;
+      workspace_id?: string;
+      epic_reference?: string;
+      description?: string;
+      workflow_status?: string;
+      assigned_to_user_email?: string;
+      tag_list?: string;
+      due_date?: string;
+    };
+
+    if (!name) throw new McpError(ErrorCode.InvalidParams, "name is required");
+    if (!release_reference) throw new McpError(ErrorCode.InvalidParams, "release_reference is required");
+
+    const releaseId = await this.resolveReleaseId(release_reference);
+    // Derive workspace from release prefix if not explicitly provided
+    const projectId = workspace_id ?? release_reference.split("-R-")[0];
+    const epicId = epic_reference && EPIC_REF_REGEX.test(epic_reference) ? epic_reference : undefined;
+
+    try {
+      const data = await this.client.request<CreateFeaturePayload>(
+        createFeatureMutation,
+        {
+          name,
+          releaseId,
+          projectId,
+          epicId,
+          description,
+          workflowStatusName: workflow_status,
+          assignedToUserEmail: assigned_to_user_email,
+          tagList: tag_list,
+          dueDate: due_date,
+        }
+      );
+      const errs = this.formatMutationErrors(data.createFeature.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Create failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.createFeature.feature, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to create feature: ${msg}`);
+    }
+  }
+
+  // ── update_feature ─────────────────────────────────────────────────────────
+
+  async handleUpdateFeature(request: any) {
+    const {
+      reference,
+      name,
+      description,
+      workflow_status,
+      assigned_to_user_email,
+      tag_list,
+      due_date,
+      epic_reference,
+    } = request.params.arguments as {
+      reference: string;
+      name?: string;
+      description?: string;
+      workflow_status?: string;
+      assigned_to_user_email?: string;
+      tag_list?: string;
+      due_date?: string;
+      epic_reference?: string;
+    };
+
+    if (!reference) throw new McpError(ErrorCode.InvalidParams, "reference is required");
+    if (!FEATURE_REF_REGEX.test(reference)) {
+      throw new McpError(ErrorCode.InvalidParams, "Invalid feature reference format. Expected PREFIX-NUM (e.g., ZS-26)");
+    }
+
+    const epicId = epic_reference && EPIC_REF_REGEX.test(epic_reference) ? epic_reference : undefined;
+
+    try {
+      const data = await this.client.request<UpdateFeaturePayload>(
+        updateFeatureMutation,
+        {
+          id: reference,
+          name,
+          description,
+          workflowStatusName: workflow_status,
+          assignedToUserEmail: assigned_to_user_email,
+          tagList: tag_list,
+          dueDate: due_date,
+          epicId,
+        }
+      );
+      const errs = this.formatMutationErrors(data.updateFeature.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Update failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.updateFeature.feature, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to update feature: ${msg}`);
+    }
+  }
+
+  // ── delete_feature ─────────────────────────────────────────────────────────
+
+  async handleDeleteFeature(request: any) {
+    const { reference } = request.params.arguments as { reference: string };
+    if (!reference) throw new McpError(ErrorCode.InvalidParams, "reference is required");
+    if (!FEATURE_REF_REGEX.test(reference)) {
+      throw new McpError(ErrorCode.InvalidParams, "Invalid feature reference format. Expected PREFIX-NUM (e.g., ZS-26)");
+    }
+
+    try {
+      const data = await this.client.request<DeleteFeaturePayload>(
+        deleteFeatureMutation,
+        { id: reference }
+      );
+      const errs = this.formatMutationErrors(data.deleteFeature.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Delete failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify({ deleted: true, referenceNum: data.deleteFeature.feature?.referenceNum }) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to delete feature: ${msg}`);
+    }
+  }
+
+  // ── create_epic ────────────────────────────────────────────────────────────
+
+  async handleCreateEpic(request: any) {
+    const {
+      name,
+      release_reference,
+      description,
+      workflow_status,
+      assigned_to_user_email,
+      initiative_reference,
+    } = request.params.arguments as {
+      name: string;
+      release_reference: string;
+      description?: string;
+      workflow_status?: string;
+      assigned_to_user_email?: string;
+      initiative_reference?: string;
+    };
+
+    if (!name) throw new McpError(ErrorCode.InvalidParams, "name is required");
+    if (!release_reference) throw new McpError(ErrorCode.InvalidParams, "release_reference is required");
+
+    const releaseId = await this.resolveReleaseId(release_reference);
+    const initiativeId = initiative_reference && INITIATIVE_REF_REGEX.test(initiative_reference)
+      ? initiative_reference
+      : undefined;
+
+    try {
+      const data = await this.client.request<CreateEpicPayload>(
+        createEpicMutation,
+        {
+          name,
+          releaseId,
+          description,
+          workflowStatusName: workflow_status,
+          assignedToUserEmail: assigned_to_user_email,
+          initiativeId,
+        }
+      );
+      const errs = this.formatMutationErrors(data.createEpic.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Create failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.createEpic.epic, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to create epic: ${msg}`);
+    }
+  }
+
+  // ── update_epic ────────────────────────────────────────────────────────────
+
+  async handleUpdateEpic(request: any) {
+    const {
+      reference,
+      name,
+      description,
+      workflow_status,
+      assigned_to_user_email,
+      initiative_reference,
+    } = request.params.arguments as {
+      reference: string;
+      name?: string;
+      description?: string;
+      workflow_status?: string;
+      assigned_to_user_email?: string;
+      initiative_reference?: string;
+    };
+
+    if (!reference) throw new McpError(ErrorCode.InvalidParams, "reference is required");
+    if (!EPIC_REF_REGEX.test(reference)) {
+      throw new McpError(ErrorCode.InvalidParams, "Invalid epic reference format. Expected PREFIX-E-NUM (e.g., ZS-E-28)");
+    }
+
+    const initiativeId = initiative_reference && INITIATIVE_REF_REGEX.test(initiative_reference)
+      ? initiative_reference
+      : undefined;
+
+    try {
+      const data = await this.client.request<UpdateEpicPayload>(
+        updateEpicMutation,
+        {
+          id: reference,
+          name,
+          description,
+          workflowStatusName: workflow_status,
+          assignedToUserEmail: assigned_to_user_email,
+          initiativeId,
+        }
+      );
+      const errs = this.formatMutationErrors(data.updateEpic.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Update failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.updateEpic.epic, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to update epic: ${msg}`);
+    }
+  }
+
+  // ── delete_epic ────────────────────────────────────────────────────────────
+
+  async handleDeleteEpic(request: any) {
+    const { reference } = request.params.arguments as { reference: string };
+    if (!reference) throw new McpError(ErrorCode.InvalidParams, "reference is required");
+    if (!EPIC_REF_REGEX.test(reference)) {
+      throw new McpError(ErrorCode.InvalidParams, "Invalid epic reference format. Expected PREFIX-E-NUM (e.g., ZS-E-28)");
+    }
+
+    try {
+      const data = await this.client.request<DeleteEpicPayload>(
+        deleteEpicMutation,
+        { id: reference }
+      );
+      const errs = this.formatMutationErrors(data.deleteEpic.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Delete failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify({ deleted: true, referenceNum: data.deleteEpic.epic?.referenceNum }) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to delete epic: ${msg}`);
+    }
+  }
+
+  // ── create_requirement ─────────────────────────────────────────────────────
+
+  async handleCreateRequirement(request: any) {
+    const {
+      name,
+      feature_reference,
+      description,
+      workflow_status,
+      assigned_to_user_email,
+    } = request.params.arguments as {
+      name: string;
+      feature_reference: string;
+      description?: string;
+      workflow_status?: string;
+      assigned_to_user_email?: string;
+    };
+
+    if (!name) throw new McpError(ErrorCode.InvalidParams, "name is required");
+    if (!feature_reference) throw new McpError(ErrorCode.InvalidParams, "feature_reference is required");
+    if (!FEATURE_REF_REGEX.test(feature_reference)) {
+      throw new McpError(ErrorCode.InvalidParams, "Invalid feature reference format. Expected PREFIX-NUM (e.g., ZS-26)");
+    }
+
+    try {
+      const data = await this.client.request<CreateRequirementPayload>(
+        createRequirementMutation,
+        {
+          name,
+          featureId: feature_reference,
+          description,
+          workflowStatusName: workflow_status,
+          assignedToUserEmail: assigned_to_user_email,
+        }
+      );
+      const errs = this.formatMutationErrors(data.createRequirement.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Create failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.createRequirement.requirement, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to create requirement: ${msg}`);
+    }
+  }
+
+  // ── update_requirement ─────────────────────────────────────────────────────
+
+  async handleUpdateRequirement(request: any) {
+    const {
+      reference,
+      name,
+      description,
+      workflow_status,
+      assigned_to_user_email,
+    } = request.params.arguments as {
+      reference: string;
+      name?: string;
+      description?: string;
+      workflow_status?: string;
+      assigned_to_user_email?: string;
+    };
+
+    if (!reference) throw new McpError(ErrorCode.InvalidParams, "reference is required");
+    if (!REQUIREMENT_REF_REGEX.test(reference)) {
+      throw new McpError(ErrorCode.InvalidParams, "Invalid requirement reference format. Expected PREFIX-NUM-NUM (e.g., ZS-26-1)");
+    }
+
+    try {
+      const data = await this.client.request<UpdateRequirementPayload>(
+        updateRequirementMutation,
+        {
+          id: reference,
+          name,
+          description,
+          workflowStatusName: workflow_status,
+          assignedToUserEmail: assigned_to_user_email,
+        }
+      );
+      const errs = this.formatMutationErrors(data.updateRequirement.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Update failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.updateRequirement.requirement, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to update requirement: ${msg}`);
+    }
+  }
+
+  // ── delete_requirement ─────────────────────────────────────────────────────
+
+  async handleDeleteRequirement(request: any) {
+    const { reference } = request.params.arguments as { reference: string };
+    if (!reference) throw new McpError(ErrorCode.InvalidParams, "reference is required");
+    if (!REQUIREMENT_REF_REGEX.test(reference)) {
+      throw new McpError(ErrorCode.InvalidParams, "Invalid requirement reference format. Expected PREFIX-NUM-NUM (e.g., ZS-26-1)");
+    }
+
+    try {
+      const data = await this.client.request<DeleteRequirementPayload>(
+        deleteRequirementMutation,
+        { id: reference }
+      );
+      const errs = this.formatMutationErrors(data.deleteRequirement.errors);
+      if (errs) throw new McpError(ErrorCode.InternalError, `Delete failed: ${errs}`);
+      return {
+        content: [{ type: "text", text: JSON.stringify({ deleted: true, referenceNum: data.deleteRequirement.requirement?.referenceNum }) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to delete requirement: ${msg}`);
     }
   }
 }

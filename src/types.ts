@@ -177,6 +177,99 @@ export interface InitiativeDetailResponse {
   initiative: InitiativeDetail;
 }
 
+// ── Mutation payload types ────────────────────────────────────────────────────
+
+export interface MutationAttributeError {
+  name: string;
+  messages: string[];
+}
+
+export interface MutationErrors {
+  attributes: MutationAttributeError[];
+}
+
+/** Minimal record shape returned in mutation payloads */
+export interface MutationFeatureResult {
+  referenceNum: string;
+  name: string;
+  workflowStatus: WorkflowStatusDetail;
+  epic: EpicRef | null;
+  assignedToUser: UserRef | null;
+  dueDate: string | null;
+  tagList: string;
+}
+
+export interface MutationEpicResult {
+  referenceNum: string;
+  name: string;
+  workflowStatus: WorkflowStatusDetail;
+  initiative: InitiativeRef | null;
+  assignedToUser: UserRef | null;
+  dueDate: string | null;
+}
+
+export interface MutationRequirementResult {
+  referenceNum: string;
+  name: string | null;
+  workflowStatus: WorkflowStatusDetail;
+}
+
+export interface CreateFeaturePayload {
+  createFeature: { errors: MutationErrors; feature: MutationFeatureResult | null };
+}
+
+export interface UpdateFeaturePayload {
+  updateFeature: { errors: MutationErrors; feature: MutationFeatureResult | null };
+}
+
+export interface DeleteFeaturePayload {
+  deleteFeature: { errors: MutationErrors; feature: { referenceNum: string } | null };
+}
+
+export interface CreateEpicPayload {
+  createEpic: { errors: MutationErrors; epic: MutationEpicResult | null };
+}
+
+export interface UpdateEpicPayload {
+  updateEpic: { errors: MutationErrors; epic: MutationEpicResult | null };
+}
+
+export interface DeleteEpicPayload {
+  deleteEpic: { errors: MutationErrors; epic: { referenceNum: string } | null };
+}
+
+export interface CreateRequirementPayload {
+  createRequirement: { errors: MutationErrors; requirement: MutationRequirementResult | null };
+}
+
+export interface UpdateRequirementPayload {
+  updateRequirement: { errors: MutationErrors; requirement: MutationRequirementResult | null };
+}
+
+export interface DeleteRequirementPayload {
+  deleteRequirement: { errors: MutationErrors; requirement: { referenceNum: string } | null };
+}
+
+// ── Releases ─────────────────────────────────────────────────────────────────
+
+export const RELEASE_REF_REGEX = /^([A-Z][A-Z0-9]*)-R-(\d+)$/;
+
+export interface ReleaseNode {
+  id: string;
+  referenceNum: string;
+  name: string;
+}
+
+export interface ReleasesListResponse {
+  releases: {
+    nodes: ReleaseNode[];
+    currentPage: number;
+    totalCount: number;
+    totalPages: number;
+    isLastPage: boolean;
+  };
+}
+
 // Regular expressions for validating reference numbers
 export const FEATURE_REF_REGEX = /^([A-Z][A-Z0-9]*)-(\d+)$/;
 export const EPIC_REF_REGEX = /^([A-Z][A-Z0-9]*)-E-(\d+)$/;

@@ -108,6 +108,11 @@ tests.push({ name: "list_workflow_statuses", args: { workspaceId: WORKSPACE } })
 tests.push({ name: "search_documents", args: { query: WORKSPACE, searchableType: "Feature" } });
 tests.push({ name: "search_documents", args: { query: WORKSPACE, searchableType: "Epic" } });
 
+// list_releases always tested if TEST_RELEASE_REF is set
+if (process.env.TEST_RELEASE_REF) {
+  tests.push({ name: "list_releases", args: { workspaceId: WORKSPACE } });
+}
+
 for (const t of tests) {
   queue.push(callTool(t.name, t.args));
 }

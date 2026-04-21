@@ -231,6 +231,150 @@ class AhaMcp {
             required: ["reference"],
           },
         },
+        {
+          name: "list_releases",
+          description: "List releases in an Aha! workspace. Returns id, referenceNum, and name. The release_reference (e.g. ZS-R-4) is required when creating features or epics.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              workspaceId: { type: "string", description: "Workspace reference prefix (e.g., ZS)" },
+              page: { type: "integer", description: "Page number for pagination", default: 1 },
+            },
+            required: ["workspaceId"],
+          },
+        },
+        {
+          name: "create_feature",
+          description: "Create a new feature in Aha!. Use list_releases to find a valid release_reference. Optionally link to an epic and set workflow_status, assignee, tags, and due_date.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Feature name" },
+              release_reference: { type: "string", description: "Release reference (e.g., ZS-R-4). Use list_releases to find valid values." },
+              workspace_id: { type: "string", description: "Workspace prefix (e.g., ZS). Defaults to the prefix from release_reference." },
+              epic_reference: { type: "string", description: "Optional epic to assign this feature to (e.g., ZS-E-28)" },
+              description: { type: "string", description: "Feature description (markdown supported)" },
+              workflow_status: { type: "string", description: "Workflow status name (e.g., 'Under consideration'). Use list_workflow_statuses to see valid values." },
+              assigned_to_user_email: { type: "string", description: "Email address of the user to assign" },
+              tag_list: { type: "string", description: "Comma-separated tags (e.g., 'backend,api')" },
+              due_date: { type: "string", description: "Due date in YYYY-MM-DD format" },
+            },
+            required: ["name", "release_reference"],
+          },
+        },
+        {
+          name: "update_feature",
+          description: "Update an existing Aha! feature. Only provide fields you want to change — unset fields are left unchanged.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              reference: { type: "string", description: "Feature reference number (e.g., ZS-26)" },
+              name: { type: "string", description: "New name" },
+              description: { type: "string", description: "New description (markdown)" },
+              workflow_status: { type: "string", description: "New workflow status name (e.g., 'In development')" },
+              assigned_to_user_email: { type: "string", description: "Email of new assignee" },
+              tag_list: { type: "string", description: "Comma-separated tags (replaces existing)" },
+              due_date: { type: "string", description: "Due date in YYYY-MM-DD format" },
+              epic_reference: { type: "string", description: "Epic to move this feature to (e.g., ZS-E-14)" },
+            },
+            required: ["reference"],
+          },
+        },
+        {
+          name: "delete_feature",
+          description: "Permanently delete an Aha! feature. This is irreversible.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              reference: { type: "string", description: "Feature reference number (e.g., ZS-26)" },
+            },
+            required: ["reference"],
+          },
+        },
+        {
+          name: "create_epic",
+          description: "Create a new epic in Aha!. Use list_releases to find a valid release_reference.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Epic name" },
+              release_reference: { type: "string", description: "Release reference (e.g., ZS-R-4). Use list_releases to find valid values." },
+              description: { type: "string", description: "Epic description (markdown supported)" },
+              workflow_status: { type: "string", description: "Workflow status name. Use list_workflow_statuses to see valid values." },
+              assigned_to_user_email: { type: "string", description: "Email of the user to assign" },
+              initiative_reference: { type: "string", description: "Initiative to link this epic to (e.g., ZS-S-4)" },
+            },
+            required: ["name", "release_reference"],
+          },
+        },
+        {
+          name: "update_epic",
+          description: "Update an existing Aha! epic. Only provide fields you want to change.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              reference: { type: "string", description: "Epic reference number (e.g., ZS-E-28)" },
+              name: { type: "string", description: "New name" },
+              description: { type: "string", description: "New description (markdown)" },
+              workflow_status: { type: "string", description: "New workflow status name" },
+              assigned_to_user_email: { type: "string", description: "Email of new assignee" },
+              initiative_reference: { type: "string", description: "Initiative to link to (e.g., ZS-S-4)" },
+            },
+            required: ["reference"],
+          },
+        },
+        {
+          name: "delete_epic",
+          description: "Permanently delete an Aha! epic. This is irreversible.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              reference: { type: "string", description: "Epic reference number (e.g., ZS-E-28)" },
+            },
+            required: ["reference"],
+          },
+        },
+        {
+          name: "create_requirement",
+          description: "Create a new requirement (sub-item) under an Aha! feature.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Requirement name" },
+              feature_reference: { type: "string", description: "Parent feature reference (e.g., ZS-26)" },
+              description: { type: "string", description: "Requirement description (markdown supported)" },
+              workflow_status: { type: "string", description: "Workflow status name" },
+              assigned_to_user_email: { type: "string", description: "Email of the user to assign" },
+            },
+            required: ["name", "feature_reference"],
+          },
+        },
+        {
+          name: "update_requirement",
+          description: "Update an existing Aha! requirement. Only provide fields you want to change.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              reference: { type: "string", description: "Requirement reference (e.g., ZS-26-1)" },
+              name: { type: "string", description: "New name" },
+              description: { type: "string", description: "New description (markdown)" },
+              workflow_status: { type: "string", description: "New workflow status name" },
+              assigned_to_user_email: { type: "string", description: "Email of new assignee" },
+            },
+            required: ["reference"],
+          },
+        },
+        {
+          name: "delete_requirement",
+          description: "Permanently delete an Aha! requirement. This is irreversible.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              reference: { type: "string", description: "Requirement reference (e.g., ZS-26-1)" },
+            },
+            required: ["reference"],
+          },
+        },
       ],
     }));
 
@@ -255,6 +399,26 @@ class AhaMcp {
         return this.handlers.handleListWorkflowStatuses(request);
       } else if (request.params.name === "get_initiative") {
         return this.handlers.handleGetInitiative(request);
+      } else if (request.params.name === "list_releases") {
+        return this.handlers.handleListReleases(request);
+      } else if (request.params.name === "create_feature") {
+        return this.handlers.handleCreateFeature(request);
+      } else if (request.params.name === "update_feature") {
+        return this.handlers.handleUpdateFeature(request);
+      } else if (request.params.name === "delete_feature") {
+        return this.handlers.handleDeleteFeature(request);
+      } else if (request.params.name === "create_epic") {
+        return this.handlers.handleCreateEpic(request);
+      } else if (request.params.name === "update_epic") {
+        return this.handlers.handleUpdateEpic(request);
+      } else if (request.params.name === "delete_epic") {
+        return this.handlers.handleDeleteEpic(request);
+      } else if (request.params.name === "create_requirement") {
+        return this.handlers.handleCreateRequirement(request);
+      } else if (request.params.name === "update_requirement") {
+        return this.handlers.handleUpdateRequirement(request);
+      } else if (request.params.name === "delete_requirement") {
+        return this.handlers.handleDeleteRequirement(request);
       }
 
       throw new McpError(
