@@ -20,16 +20,45 @@ export const getPageQuery = `
 export const getFeatureQuery = `
   query GetFeature($id: ID!) {
     feature(id: $id) {
+      referenceNum
       name
       description {
         markdownBody
       }
+      workflowStatus {
+        name
+        internalMeaning
+      }
+      tagList
+      tags {
+        name
+      }
+      dueDate
+      startDate
+      assignedToUser {
+        name
+        email
+      }
+      epic {
+        referenceNum
+        name
+      }
       integrationLinks {
         name
         url
-        integrationId
         integration {
           serviceName
+        }
+      }
+      requirements {
+        referenceNum
+        name
+        workflowStatus {
+          name
+          internalMeaning
+        }
+        description {
+          markdownBody
         }
       }
     }
@@ -39,14 +68,58 @@ export const getFeatureQuery = `
 export const getEpicQuery = `
   query GetEpic($id: ID!) {
     epic(id: $id) {
+      referenceNum
       name
       description {
         markdownBody
       }
+      workflowStatus {
+        name
+        internalMeaning
+      }
+      tagList
+      tags {
+        name
+      }
+      dueDate
+      startDate
+      assignedToUser {
+        name
+        email
+      }
+      initiative {
+        referenceNum
+        name
+      }
+      featuresCount
+      features {
+        referenceNum
+        name
+        workflowStatus {
+          name
+          internalMeaning
+        }
+        dueDate
+        startDate
+        assignedToUser {
+          name
+          email
+        }
+        tagList
+        description {
+          markdownBody
+        }
+        integrationLinks {
+          name
+          url
+          integration {
+            serviceName
+          }
+        }
+      }
       integrationLinks {
         name
         url
-        integrationId
         integration {
           serviceName
         }
@@ -145,6 +218,87 @@ export const listGoalsQuery = `
       goals {
         referenceNum
         name
+      }
+    }
+  }
+`;
+
+export const listFeaturesForEpicQuery = `
+  query ListFeaturesForEpic($epicId: ID!) {
+    epic(id: $epicId) {
+      referenceNum
+      name
+      featuresCount
+      features {
+        referenceNum
+        name
+        workflowStatus {
+          name
+          internalMeaning
+        }
+        dueDate
+        startDate
+        assignedToUser {
+          name
+          email
+        }
+        tagList
+        description {
+          markdownBody
+        }
+        integrationLinks {
+          name
+          url
+          integration {
+            serviceName
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const listWorkflowStatusesQuery = `
+  query ListWorkflowStatuses($workspaceId: ID!) {
+    features(filters: { projectId: $workspaceId }, page: 1) {
+      nodes {
+        workflowKind {
+          name
+          workflow {
+            name
+            workflowStatuses {
+              name
+              internalMeaning
+              position
+            }
+          }
+        }
+      }
+      totalCount
+    }
+  }
+`;
+
+export const getInitiativeDetailQuery = `
+  query GetInitiativeDetail($id: ID!) {
+    initiative(id: $id) {
+      referenceNum
+      name
+      description {
+        markdownBody
+      }
+      workflowStatus {
+        name
+        internalMeaning
+      }
+      epicsCount
+      epics {
+        referenceNum
+        name
+        workflowStatus {
+          name
+          internalMeaning
+        }
       }
     }
   }

@@ -22,6 +22,9 @@ import {
   GoalsListResponse,
   ListRecordType,
   PersonaDetail,
+  EpicFeaturesListResponse,
+  WorkflowStatusesListResponse,
+  InitiativeDetailResponse,
 } from "./types.js";
 import {
   getFeatureQuery,
@@ -34,6 +37,9 @@ import {
   listWorkspacesQuery,
   listInitiativesQuery,
   listGoalsQuery,
+  listFeaturesForEpicQuery,
+  listWorkflowStatusesQuery,
+  getInitiativeDetailQuery,
 } from "./queries.js";
 
 export class Handlers {
@@ -54,7 +60,7 @@ export class Handlers {
     }
 
     try {
-      let result: Record | undefined;
+      let result: unknown;
 
       if (EPIC_REF_REGEX.test(reference)) {
         const data = await this.client.request<EpicResponse>(
@@ -441,6 +447,150 @@ export class Handlers {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("API Error:", errorMessage);
       throw new McpError(ErrorCode.InternalError, `Failed to fetch persona: ${errorMessage}`);
+    }
+  }
+
+  async handleListFeaturesForEpic(request: any) {
+    const { epic_reference, page } = request.params.arguments as {
+      epic_reference: string;
+      page?: number;
+    };
+
+    if (!epic_reference) {
+      throw new McpError(ErrorCode.InvalidParams, "epic_reference is required");
+    }
+
+    if (!EPIC_REF_REGEX.test(epic_reference)) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "Invalid epic reference format. Expected PREFIX-E-NUM (e.g., ZS-E-28)"
+      );
+    }
+
+    try {
+      const data = await this.client.request<EpicFeaturesListResponse>(
+        listFeaturesForEpicQuery,
+        { epicId: epic_reference }
+      );
+
+      if (!data.epic) {
+        return {
+          content: [{ type: "text", text: `No epic found for reference ${epic_reference}` }],
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.epic, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("API Error:", errorMessage);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to fetch features for epic: ${errorMessage}`
+      );
+    }
+  }
+
+  async handleListWorkflowStatuses(request: any) {
+    const { workspaceId } = request.params.arguments as { workspaceId: string };
+
+    if (!workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, "workspaceId is required");
+    }
+
+    try {
+      const data = await this.client.request<WorkflowStatusesListResponse>(
+        listWorkflowStatusesQuery,
+        { workspaceId }
+      );
+
+      const nodes = data.features?.nodes ?? [];
+      if (nodes.length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              workspaceId,
+              message: "No features found in workspace to derive workflow statuses",
+              workflowStatuses: [],
+            }, null, 2),
+          }],
+        };
+      }
+
+      // Deduplicate by workflow name, return all unique workflows found
+      const workflowsByName = new Map<string, { workflowKindName: string; workflowName: string; statuses: object[] }>();
+      for (const node of nodes) {
+        const wf = node.workflowKind?.workflow;
+        if (wf && !workflowsByName.has(wf.name)) {
+          workflowsByName.set(wf.name, {
+            workflowKindName: node.workflowKind.name,
+            workflowName: wf.name,
+            statuses: wf.workflowStatuses,
+          });
+        }
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            workspaceId,
+            totalFeatures: data.features.totalCount,
+            workflows: Array.from(workflowsByName.values()),
+          }, null, 2),
+        }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("API Error:", errorMessage);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to fetch workflow statuses: ${errorMessage}`
+      );
+    }
+  }
+
+  async handleGetInitiative(request: any) {
+    const { reference } = request.params.arguments as { reference: string };
+
+    if (!reference) {
+      throw new McpError(ErrorCode.InvalidParams, "Reference number is required");
+    }
+
+    if (!INITIATIVE_REF_REGEX.test(reference)) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "Invalid initiative reference format. Expected PREFIX-S-NUM (e.g., ZS-S-4)"
+      );
+    }
+
+    try {
+      const data = await this.client.request<InitiativeDetailResponse>(
+        getInitiativeDetailQuery,
+        { id: reference }
+      );
+
+      if (!data.initiative) {
+        return {
+          content: [{ type: "text", text: `No initiative found for reference ${reference}` }],
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data.initiative, null, 2) }],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("API Error:", errorMessage);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to fetch initiative: ${errorMessage}`
+      );
     }
   }
 }

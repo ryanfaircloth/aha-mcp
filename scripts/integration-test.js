@@ -89,6 +89,7 @@ const tests = [
 
 if (process.env.TEST_EPIC_REF) {
   tests.push({ name: "get_record", args: { reference: process.env.TEST_EPIC_REF } });
+  tests.push({ name: "list_features_for_epic", args: { epic_reference: process.env.TEST_EPIC_REF } });
 }
 if (process.env.TEST_FEATURE_REF) {
   tests.push({ name: "get_record", args: { reference: process.env.TEST_FEATURE_REF } });
@@ -99,6 +100,13 @@ if (process.env.TEST_PAGE_REF) {
 if (process.env.TEST_PERSONA_ID) {
   tests.push({ name: "get_persona", args: { workspaceId: WORKSPACE, id: process.env.TEST_PERSONA_ID } });
 }
+if (process.env.TEST_INITIATIVE_REF) {
+  tests.push({ name: "get_initiative", args: { reference: process.env.TEST_INITIATIVE_REF } });
+}
+// Always test workflow statuses and search enhancements
+tests.push({ name: "list_workflow_statuses", args: { workspaceId: WORKSPACE } });
+tests.push({ name: "search_documents", args: { query: WORKSPACE, searchableType: "Feature" } });
+tests.push({ name: "search_documents", args: { query: WORKSPACE, searchableType: "Epic" } });
 
 for (const t of tests) {
   queue.push(callTool(t.name, t.args));

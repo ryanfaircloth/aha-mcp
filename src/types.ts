@@ -5,12 +5,86 @@ export interface Description {
 export interface IntegrationLink {
   name: string;
   url: string;
-  integrationId: string;
   integration: {
     serviceName: string;
   };
 }
 
+export interface WorkflowStatusDetail {
+  name: string;
+  internalMeaning: string | null;
+}
+
+export interface UserRef {
+  name: string;
+  email: string | null;
+}
+
+export interface TagItem {
+  name: string;
+}
+
+export interface RequirementItem {
+  referenceNum: string;
+  name: string | null;
+  workflowStatus: WorkflowStatusDetail;
+  description: { markdownBody: string };
+}
+
+export interface EpicRef {
+  referenceNum: string;
+  name: string;
+}
+
+export interface InitiativeRef {
+  referenceNum: string | null;
+  name: string;
+}
+
+export interface FeatureSummary {
+  referenceNum: string;
+  name: string;
+  workflowStatus: WorkflowStatusDetail;
+  dueDate: string | null;
+  startDate: string | null;
+  assignedToUser: UserRef | null;
+  tagList: string;
+  description: { markdownBody: string };
+  integrationLinks: IntegrationLink[];
+}
+
+export interface FeatureDetail {
+  referenceNum: string;
+  name: string;
+  description: { markdownBody: string };
+  workflowStatus: WorkflowStatusDetail;
+  tagList: string;
+  tags: TagItem[];
+  dueDate: string | null;
+  startDate: string | null;
+  assignedToUser: UserRef | null;
+  epic: EpicRef | null;
+  integrationLinks: IntegrationLink[];
+  requirements: RequirementItem[];
+}
+
+export interface EpicDetail {
+  referenceNum: string;
+  name: string;
+  description: { markdownBody: string };
+  workflowStatus: WorkflowStatusDetail;
+  tagList: string;
+  tags: TagItem[];
+  dueDate: string | null;
+  startDate: string | null;
+  assignedToUser: UserRef | null;
+  initiative: InitiativeRef | null;
+  featuresCount: number;
+  features: FeatureSummary[];
+  integrationLinks: IntegrationLink[];
+}
+
+// Simple record for goal/initiative/requirement responses that only need name+description
 export interface Record {
   name: string;
   description: Description;
@@ -18,7 +92,7 @@ export interface Record {
 }
 
 export interface FeatureResponse {
-  feature: Record;
+  feature: FeatureDetail;
 }
 
 export interface RequirementResponse {
@@ -45,7 +119,7 @@ export interface IdeaResponse {
 }
 
 export interface EpicResponse {
-  epic: Record;
+  epic: EpicDetail;
 }
 
 export interface InitiativeResponse {
@@ -54,6 +128,53 @@ export interface InitiativeResponse {
 
 export interface GoalResponse {
   goal: Record;
+}
+
+export interface EpicFeaturesListResponse {
+  epic: {
+    referenceNum: string;
+    name: string;
+    featuresCount: number;
+    features: FeatureSummary[];
+  };
+}
+
+export interface WorkflowStatusInfo {
+  name: string;
+  internalMeaning: string | null;
+  position: number;
+}
+
+export interface WorkflowStatusesListResponse {
+  features: {
+    nodes: Array<{
+      workflowKind: {
+        name: string;
+        workflow: {
+          name: string;
+          workflowStatuses: WorkflowStatusInfo[];
+        };
+      };
+    }>;
+    totalCount: number;
+  };
+}
+
+export interface InitiativeDetail {
+  referenceNum: string | null;
+  name: string;
+  description: { markdownBody: string };
+  workflowStatus: WorkflowStatusDetail;
+  epics: Array<{
+    referenceNum: string;
+    name: string;
+    workflowStatus: WorkflowStatusDetail;
+  }>;
+  epicsCount: number;
+}
+
+export interface InitiativeDetailResponse {
+  initiative: InitiativeDetail;
 }
 
 // Regular expressions for validating reference numbers

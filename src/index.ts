@@ -62,7 +62,7 @@ class AhaMcp {
       tools: [
         {
           name: "get_record",
-          description: "Get an Aha! feature or requirement by reference number",
+          description: "Get an Aha! feature, epic, requirement, initiative, or goal by reference number. Features return: workflow_status, parent epic, requirements, tags, assigned_to_user, due_date, and GitHub/integration links. Epics return: workflow_status, initiative parent, features list with statuses, tags, due_date, and integration links.",
           inputSchema: {
             type: "object",
             properties: {
@@ -111,7 +111,7 @@ class AhaMcp {
         },
         {
           name: "search_documents",
-          description: "Search for Aha! documents",
+          description: "Search for Aha! documents. Supported searchableType values: Page, Feature, Epic, Requirement, Initiative, Goal, Idea.",
           inputSchema: {
             type: "object",
             properties: {
@@ -121,7 +121,7 @@ class AhaMcp {
               },
               searchableType: {
                 type: "string",
-                description: "Type of document to search for (e.g., Page)",
+                description: "Type of document to search for. Valid values: Page, Feature, Epic, Requirement, Initiative, Goal, Idea",
                 default: "Page",
               },
               page: {
@@ -189,6 +189,48 @@ class AhaMcp {
             required: ["workspaceId", "id"],
           },
         },
+        {
+          name: "list_features_for_epic",
+          description: "List all features under an Aha! epic with full details: workflow status, description, due date, assigned user, tags, and GitHub/integration links. Use this to load the full content of an epic for roadmap building.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              epic_reference: {
+                type: "string",
+                description: "Epic reference number (e.g., ZS-E-28)",
+              },
+            },
+            required: ["epic_reference"],
+          },
+        },
+        {
+          name: "list_workflow_statuses",
+          description: "List all workflow status values for a workspace so an agent can understand the feature lifecycle (e.g., Under consideration → In development → Shipped). Returns status names, their lifecycle category (internalMeaning), and position.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              workspaceId: {
+                type: "string",
+                description: "Workspace reference prefix (e.g., ZS)",
+              },
+            },
+            required: ["workspaceId"],
+          },
+        },
+        {
+          name: "get_initiative",
+          description: "Get an Aha! initiative by reference number, including its workflow status, description, and the full list of child epics with their statuses. Useful for understanding high-level roadmap structure.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              reference: {
+                type: "string",
+                description: "Initiative reference number (e.g., ZS-S-4). Note: initiatives use the -S- prefix.",
+              },
+            },
+            required: ["reference"],
+          },
+        },
       ],
     }));
 
@@ -207,6 +249,12 @@ class AhaMcp {
         return this.handlers.handleListRecords(request);
       } else if (request.params.name === "get_persona") {
         return this.handlers.handleGetPersona(request);
+      } else if (request.params.name === "list_features_for_epic") {
+        return this.handlers.handleListFeaturesForEpic(request);
+      } else if (request.params.name === "list_workflow_statuses") {
+        return this.handlers.handleListWorkflowStatuses(request);
+      } else if (request.params.name === "get_initiative") {
+        return this.handlers.handleGetInitiative(request);
       }
 
       throw new McpError(
