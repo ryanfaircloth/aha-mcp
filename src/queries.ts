@@ -112,69 +112,23 @@ export const listWorkspacesQuery = `
   }
 `;
 
-export const listFeaturesQuery = `
-  query ListFeatures($workspaceId: ID!, $page: Int) {
-    project(id: $workspaceId) {
-      features(page: $page) {
-        nodes {
-          referenceNum
-          name
-        }
-        currentPage
-        totalCount
-        totalPages
-        isLastPage
-      }
-    }
-  }
-`;
-
-export const listEpicsQuery = `
-  query ListEpics($workspaceId: ID!, $page: Int) {
-    project(id: $workspaceId) {
-      epics(page: $page) {
-        nodes {
-          referenceNum
-          name
-        }
-        currentPage
-        totalCount
-        totalPages
-        isLastPage
-      }
-    }
-  }
-`;
-
 export const listInitiativesQuery = `
-  query ListInitiatives($workspaceId: ID!, $page: Int) {
+  query ListInitiatives($workspaceId: ID!) {
     project(id: $workspaceId) {
-      initiatives(page: $page) {
-        nodes {
-          referenceNum
-          name
-        }
-        currentPage
-        totalCount
-        totalPages
-        isLastPage
+      initiatives {
+        referenceNum
+        name
       }
     }
   }
 `;
 
 export const listGoalsQuery = `
-  query ListGoals($workspaceId: ID!, $page: Int) {
+  query ListGoals($workspaceId: ID!) {
     project(id: $workspaceId) {
-      goals(page: $page) {
-        nodes {
-          referenceNum
-          name
-        }
-        currentPage
-        totalCount
-        totalPages
-        isLastPage
+      goals {
+        referenceNum
+        name
       }
     }
   }

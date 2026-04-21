@@ -102,19 +102,19 @@ export interface PaginatedRecordList {
 }
 
 export interface FeaturesListResponse {
-  project: { features: PaginatedRecordList };
+  features: { nodes: RecordListNode[]; currentPage: number; totalPages: number; isLastPage: boolean; totalCount: number };
 }
 
 export interface EpicsListResponse {
-  project: { epics: PaginatedRecordList };
+  epics: { nodes: RecordListNode[]; currentPage: number; totalPages: number; isLastPage: boolean; totalCount: number };
 }
 
 export interface InitiativesListResponse {
-  project: { initiatives: PaginatedRecordList };
+  project: { initiatives: RecordListNode[] };
 }
 
 export interface GoalsListResponse {
-  project: { goals: PaginatedRecordList };
+  project: { goals: RecordListNode[] };
 }
 
 export type ListRecordType = "feature" | "epic" | "initiative" | "goal" | "idea";

@@ -4,7 +4,7 @@
  * and checks responses for expected structure.
  *
  * Usage:
- *   op run --env-file ~/.config/aha-mcp.env -- npm run test:integration
+ *   TEST_WORKSPACE=ZS TEST_EPIC_REF=ZS-E-28 op run --env-file ~/.config/aha-mcp.env -- npm run test:integration
  *
  * Set TEST_WORKSPACE (e.g. "ZS") and optionally TEST_EPIC_REF (e.g. "ZS-E-28"),
  * TEST_FEATURE_REF, TEST_PAGE_REF in the env file or environment.
@@ -74,7 +74,8 @@ server.stdin.write(
     clientInfo: { name: "integration-test", version: "1.0.0" },
   })
 );
-server.stdin.write(makeRequest("notifications/initialized"));
+// Send as a notification (no id) so the server doesn't respond to it
+server.stdin.write(JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) + "\n");
 
 // Queue test calls
 const tests = [

@@ -18,8 +18,6 @@ import {
   IdeaResponse,
   SearchResponse,
   WorkspaceListResponse,
-  FeaturesListResponse,
-  EpicsListResponse,
   InitiativesListResponse,
   GoalsListResponse,
   ListRecordType,
@@ -33,8 +31,6 @@ import {
   getPageQuery,
   searchDocumentsQuery,
   listWorkspacesQuery,
-  listFeaturesQuery,
-  listEpicsQuery,
   listInitiativesQuery,
   listGoalsQuery,
 } from "./queries.js";
@@ -366,16 +362,24 @@ export class Handlers {
 
       let result: unknown;
       if (type === "feature") {
-        const data = await this.client.request<FeaturesListResponse>(listFeaturesQuery, { workspaceId, page });
-        result = data.project.features;
+        const url = `https://${this.domain}.aha.io/api/v1/products/${workspaceId}/features${page ? `?page=${page}` : ""}`;
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${this.token}`, Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(`API responded with status ${response.status}`);
+        result = await response.json();
       } else if (type === "epic") {
-        const data = await this.client.request<EpicsListResponse>(listEpicsQuery, { workspaceId, page });
-        result = data.project.epics;
+        const url = `https://${this.domain}.aha.io/api/v1/products/${workspaceId}/epics${page ? `?page=${page}` : ""}`;
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${this.token}`, Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(`API responded with status ${response.status}`);
+        result = await response.json();
       } else if (type === "initiative") {
-        const data = await this.client.request<InitiativesListResponse>(listInitiativesQuery, { workspaceId, page });
+        const data = await this.client.request<InitiativesListResponse>(listInitiativesQuery, { workspaceId });
         result = data.project.initiatives;
       } else if (type === "goal") {
-        const data = await this.client.request<GoalsListResponse>(listGoalsQuery, { workspaceId, page });
+        const data = await this.client.request<GoalsListResponse>(listGoalsQuery, { workspaceId });
         result = data.project.goals;
       } else {
         throw new McpError(ErrorCode.InvalidParams, `Unknown type: ${type}. Valid types: feature, epic, initiative, goal, idea`);
