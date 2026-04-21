@@ -160,7 +160,7 @@ class AhaMcp {
               type: {
                 type: "string",
                 description: "Type of record to list",
-                enum: ["feature", "epic", "initiative", "goal", "idea"],
+                enum: ["feature", "epic", "initiative", "goal", "idea", "persona"],
               },
               page: {
                 type: "integer",
@@ -169,6 +169,24 @@ class AhaMcp {
               },
             },
             required: ["workspaceId", "type"],
+          },
+        },
+        {
+          name: "get_persona",
+          description: "Get an Aha! persona by workspace and numeric ID",
+          inputSchema: {
+            type: "object",
+            properties: {
+              workspaceId: {
+                type: "string",
+                description: "Workspace reference prefix (e.g., PROJ)",
+              },
+              id: {
+                type: "string",
+                description: "Numeric persona ID (from list_records with type=persona)",
+              },
+            },
+            required: ["workspaceId", "id"],
           },
         },
       ],
@@ -187,6 +205,8 @@ class AhaMcp {
         return this.handlers.handleListWorkspaces(request);
       } else if (request.params.name === "list_records") {
         return this.handlers.handleListRecords(request);
+      } else if (request.params.name === "get_persona") {
+        return this.handlers.handleGetPersona(request);
       }
 
       throw new McpError(

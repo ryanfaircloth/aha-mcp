@@ -21,6 +21,7 @@ import {
   InitiativesListResponse,
   GoalsListResponse,
   ListRecordType,
+  PersonaDetail,
 } from "./types.js";
 import {
   getFeatureQuery,
@@ -381,8 +382,15 @@ export class Handlers {
       } else if (type === "goal") {
         const data = await this.client.request<GoalsListResponse>(listGoalsQuery, { workspaceId });
         result = data.project.goals;
+      } else if (type === "persona") {
+        const url = `https://${this.domain}.aha.io/api/v1/products/${workspaceId}/personas${page ? `?page=${page}` : ""}`;
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${this.token}`, Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(`API responded with status ${response.status}`);
+        result = await response.json();
       } else {
-        throw new McpError(ErrorCode.InvalidParams, `Unknown type: ${type}. Valid types: feature, epic, initiative, goal, idea`);
+        throw new McpError(ErrorCode.InvalidParams, `Unknown type: ${type}. Valid types: feature, epic, initiative, goal, idea, persona`);
       }
 
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
@@ -391,6 +399,48 @@ export class Handlers {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("API Error:", errorMessage);
       throw new McpError(ErrorCode.InternalError, `Failed to list records: ${errorMessage}`);
+    }
+  }
+
+  async handleGetPersona(request: any) {
+    const { workspaceId, id } = request.params.arguments as { workspaceId: string; id: string };
+
+    if (!workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, "workspaceId is required");
+    }
+    if (!id) {
+      throw new McpError(ErrorCode.InvalidParams, "id is required");
+    }
+
+    try {
+      const response = await fetch(
+        `https://${this.domain}.aha.io/api/v1/products/${workspaceId}/personas/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API responded with status ${response.status}`);
+      }
+
+      const data = (await response.json()) as { persona: PersonaDetail };
+
+      if (!data.persona) {
+        return {
+          content: [{ type: "text", text: `No persona found with id ${id} in workspace ${workspaceId}` }],
+        };
+      }
+
+      return { content: [{ type: "text", text: JSON.stringify(data.persona, null, 2) }] };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("API Error:", errorMessage);
+      throw new McpError(ErrorCode.InternalError, `Failed to fetch persona: ${errorMessage}`);
     }
   }
 }

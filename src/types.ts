@@ -117,4 +117,16 @@ export interface GoalsListResponse {
   project: { goals: RecordListNode[] };
 }
 
-export type ListRecordType = "feature" | "epic" | "initiative" | "goal" | "idea";
+export type ListRecordType = "feature" | "epic" | "initiative" | "goal" | "idea" | "persona";
+
+export interface PersonaNode {
+  id: string;
+  name: string;
+}
+
+export interface PersonaDetail {
+  id: string;
+  name: string;
+  description?: { htmlBody?: string };
+  color?: string;
+}

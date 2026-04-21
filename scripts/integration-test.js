@@ -84,6 +84,7 @@ const tests = [
   { name: "list_records", args: { workspaceId: WORKSPACE, type: "feature" } },
   { name: "list_records", args: { workspaceId: WORKSPACE, type: "initiative" } },
   { name: "list_records", args: { workspaceId: WORKSPACE, type: "goal" } },
+  { name: "list_records", args: { workspaceId: WORKSPACE, type: "persona" } },
 ];
 
 if (process.env.TEST_EPIC_REF) {
@@ -94,6 +95,9 @@ if (process.env.TEST_FEATURE_REF) {
 }
 if (process.env.TEST_PAGE_REF) {
   tests.push({ name: "get_page", args: { reference: process.env.TEST_PAGE_REF } });
+}
+if (process.env.TEST_PERSONA_ID) {
+  tests.push({ name: "get_persona", args: { workspaceId: WORKSPACE, id: process.env.TEST_PERSONA_ID } });
 }
 
 for (const t of tests) {
