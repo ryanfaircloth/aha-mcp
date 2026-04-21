@@ -24,6 +24,14 @@ export const getFeatureQuery = `
       description {
         markdownBody
       }
+      integrationLinks {
+        name
+        url
+        integrationId
+        integration {
+          serviceName
+        }
+      }
     }
   }
 `;
@@ -34,6 +42,14 @@ export const getEpicQuery = `
       name
       description {
         markdownBody
+      }
+      integrationLinks {
+        name
+        url
+        integrationId
+        integration {
+          serviceName
+        }
       }
     }
   }

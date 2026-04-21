@@ -2,9 +2,19 @@ export interface Description {
   htmlBody: string;
 }
 
+export interface IntegrationLink {
+  name: string;
+  url: string;
+  integrationId: string;
+  integration: {
+    serviceName: string;
+  };
+}
+
 export interface Record {
   name: string;
   description: Description;
+  integrationLinks?: IntegrationLink[];
 }
 
 export interface FeatureResponse {
