@@ -98,7 +98,7 @@ export const searchDocumentsQuery = `
 
 export const listWorkspacesQuery = `
   query ListWorkspaces($page: Int) {
-    products(page: $page) {
+    projects(page: $page) {
       nodes {
         id
         referencePrefix
@@ -114,7 +114,7 @@ export const listWorkspacesQuery = `
 
 export const listFeaturesQuery = `
   query ListFeatures($workspaceId: ID!, $page: Int) {
-    product(id: $workspaceId) {
+    project(id: $workspaceId) {
       features(page: $page) {
         nodes {
           referenceNum
@@ -131,7 +131,7 @@ export const listFeaturesQuery = `
 
 export const listEpicsQuery = `
   query ListEpics($workspaceId: ID!, $page: Int) {
-    product(id: $workspaceId) {
+    project(id: $workspaceId) {
       epics(page: $page) {
         nodes {
           referenceNum
@@ -148,7 +148,7 @@ export const listEpicsQuery = `
 
 export const listInitiativesQuery = `
   query ListInitiatives($workspaceId: ID!, $page: Int) {
-    product(id: $workspaceId) {
+    project(id: $workspaceId) {
       initiatives(page: $page) {
         nodes {
           referenceNum
@@ -165,7 +165,7 @@ export const listInitiativesQuery = `
 
 export const listGoalsQuery = `
   query ListGoals($workspaceId: ID!, $page: Int) {
-    product(id: $workspaceId) {
+    project(id: $workspaceId) {
       goals(page: $page) {
         nodes {
           referenceNum

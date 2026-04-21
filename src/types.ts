@@ -79,7 +79,7 @@ export interface WorkspaceNode {
 }
 
 export interface WorkspaceListResponse {
-  products: {
+  projects: {
     nodes: WorkspaceNode[];
     currentPage: number;
     totalCount: number;
@@ -102,19 +102,19 @@ export interface PaginatedRecordList {
 }
 
 export interface FeaturesListResponse {
-  product: { features: PaginatedRecordList };
+  project: { features: PaginatedRecordList };
 }
 
 export interface EpicsListResponse {
-  product: { epics: PaginatedRecordList };
+  project: { epics: PaginatedRecordList };
 }
 
 export interface InitiativesListResponse {
-  product: { initiatives: PaginatedRecordList };
+  project: { initiatives: PaginatedRecordList };
 }
 
 export interface GoalsListResponse {
-  product: { goals: PaginatedRecordList };
+  project: { goals: PaginatedRecordList };
 }
 
 export type ListRecordType = "feature" | "epic" | "initiative" | "goal" | "idea";

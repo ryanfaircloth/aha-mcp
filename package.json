@@ -14,7 +14,9 @@
     "build": "tsc && chmod +x build/index.js",
     "start": "node build/index.js",
     "mcp-start": "npm run build && npm run start",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:integration": "node --env-file=.env.test scripts/integration-test.js"
   },
   "keywords": [
     "aha",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.5"
   }
 }

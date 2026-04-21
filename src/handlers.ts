@@ -322,7 +322,7 @@ export class Handlers {
         content: [
           {
             type: "text",
-            text: JSON.stringify(data.products, null, 2),
+            text: JSON.stringify(data.projects, null, 2),
           },
         ],
       };
@@ -367,16 +367,16 @@ export class Handlers {
       let result: unknown;
       if (type === "feature") {
         const data = await this.client.request<FeaturesListResponse>(listFeaturesQuery, { workspaceId, page });
-        result = data.product.features;
+        result = data.project.features;
       } else if (type === "epic") {
         const data = await this.client.request<EpicsListResponse>(listEpicsQuery, { workspaceId, page });
-        result = data.product.epics;
+        result = data.project.epics;
       } else if (type === "initiative") {
         const data = await this.client.request<InitiativesListResponse>(listInitiativesQuery, { workspaceId, page });
-        result = data.product.initiatives;
+        result = data.project.initiatives;
       } else if (type === "goal") {
         const data = await this.client.request<GoalsListResponse>(listGoalsQuery, { workspaceId, page });
-        result = data.product.goals;
+        result = data.project.goals;
       } else {
         throw new McpError(ErrorCode.InvalidParams, `Unknown type: ${type}. Valid types: feature, epic, initiative, goal, idea`);
       }
