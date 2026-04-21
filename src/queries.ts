@@ -39,6 +39,28 @@ export const getEpicQuery = `
   }
 `;
 
+export const getInitiativeQuery = `
+  query GetInitiative($id: ID!) {
+    initiative(id: $id) {
+      name
+      description {
+        markdownBody
+      }
+    }
+  }
+`;
+
+export const getGoalQuery = `
+  query GetGoal($id: ID!) {
+    goal(id: $id) {
+      name
+      description {
+        markdownBody
+      }
+    }
+  }
+`;
+
 export const getRequirementQuery = `
   query GetRequirement($id: ID!) {
     requirement(id: $id) {

@@ -3,12 +3,16 @@ import { GraphQLClient } from "graphql-request";
 import {
   FEATURE_REF_REGEX,
   EPIC_REF_REGEX,
+  INITIATIVE_REF_REGEX,
+  GOAL_REF_REGEX,
   REQUIREMENT_REF_REGEX,
   NOTE_REF_REGEX,
   IDEA_REF_REGEX,
   Record,
   FeatureResponse,
   EpicResponse,
+  InitiativeResponse,
+  GoalResponse,
   RequirementResponse,
   PageResponse,
   IdeaResponse,
@@ -17,6 +21,8 @@ import {
 import {
   getFeatureQuery,
   getEpicQuery,
+  getInitiativeQuery,
+  getGoalQuery,
   getRequirementQuery,
   getPageQuery,
   searchDocumentsQuery,
@@ -48,6 +54,18 @@ export class Handlers {
           { id: reference }
         );
         result = data.epic;
+      } else if (INITIATIVE_REF_REGEX.test(reference)) {
+        const data = await this.client.request<InitiativeResponse>(
+          getInitiativeQuery,
+          { id: reference }
+        );
+        result = data.initiative;
+      } else if (GOAL_REF_REGEX.test(reference)) {
+        const data = await this.client.request<GoalResponse>(
+          getGoalQuery,
+          { id: reference }
+        );
+        result = data.goal;
       } else if (FEATURE_REF_REGEX.test(reference)) {
         const data = await this.client.request<FeatureResponse>(
           getFeatureQuery,
