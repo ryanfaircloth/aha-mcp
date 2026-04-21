@@ -102,19 +102,19 @@ export interface PaginatedRecordList {
 }
 
 export interface FeaturesListResponse {
-  features: PaginatedRecordList;
+  product: { features: PaginatedRecordList };
 }
 
 export interface EpicsListResponse {
-  epics: PaginatedRecordList;
+  product: { epics: PaginatedRecordList };
 }
 
 export interface InitiativesListResponse {
-  initiatives: PaginatedRecordList;
+  product: { initiatives: PaginatedRecordList };
 }
 
 export interface GoalsListResponse {
-  goals: PaginatedRecordList;
+  product: { goals: PaginatedRecordList };
 }
 
 export type ListRecordType = "feature" | "epic" | "initiative" | "goal" | "idea";

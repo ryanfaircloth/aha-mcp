@@ -113,61 +113,69 @@ export const listWorkspacesQuery = `
 `;
 
 export const listFeaturesQuery = `
-  query ListFeatures($workspaceId: String!, $page: Int) {
-    features(filters: { workspaceId: $workspaceId }, page: $page) {
-      nodes {
-        referenceNum
-        name
+  query ListFeatures($workspaceId: ID!, $page: Int) {
+    product(id: $workspaceId) {
+      features(page: $page) {
+        nodes {
+          referenceNum
+          name
+        }
+        currentPage
+        totalCount
+        totalPages
+        isLastPage
       }
-      currentPage
-      totalCount
-      totalPages
-      isLastPage
     }
   }
 `;
 
 export const listEpicsQuery = `
-  query ListEpics($workspaceId: String!, $page: Int) {
-    epics(filters: { workspaceId: $workspaceId }, page: $page) {
-      nodes {
-        referenceNum
-        name
+  query ListEpics($workspaceId: ID!, $page: Int) {
+    product(id: $workspaceId) {
+      epics(page: $page) {
+        nodes {
+          referenceNum
+          name
+        }
+        currentPage
+        totalCount
+        totalPages
+        isLastPage
       }
-      currentPage
-      totalCount
-      totalPages
-      isLastPage
     }
   }
 `;
 
 export const listInitiativesQuery = `
-  query ListInitiatives($workspaceId: String!, $page: Int) {
-    initiatives(filters: { workspaceId: $workspaceId }, page: $page) {
-      nodes {
-        referenceNum
-        name
+  query ListInitiatives($workspaceId: ID!, $page: Int) {
+    product(id: $workspaceId) {
+      initiatives(page: $page) {
+        nodes {
+          referenceNum
+          name
+        }
+        currentPage
+        totalCount
+        totalPages
+        isLastPage
       }
-      currentPage
-      totalCount
-      totalPages
-      isLastPage
     }
   }
 `;
 
 export const listGoalsQuery = `
-  query ListGoals($workspaceId: String!, $page: Int) {
-    goals(filters: { workspaceId: $workspaceId }, page: $page) {
-      nodes {
-        referenceNum
-        name
+  query ListGoals($workspaceId: ID!, $page: Int) {
+    product(id: $workspaceId) {
+      goals(page: $page) {
+        nodes {
+          referenceNum
+          name
+        }
+        currentPage
+        totalCount
+        totalPages
+        isLastPage
       }
-      currentPage
-      totalCount
-      totalPages
-      isLastPage
     }
   }
 `;

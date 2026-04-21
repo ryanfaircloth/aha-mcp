@@ -367,16 +367,16 @@ export class Handlers {
       let result: unknown;
       if (type === "feature") {
         const data = await this.client.request<FeaturesListResponse>(listFeaturesQuery, { workspaceId, page });
-        result = data.features;
+        result = data.product.features;
       } else if (type === "epic") {
         const data = await this.client.request<EpicsListResponse>(listEpicsQuery, { workspaceId, page });
-        result = data.epics;
+        result = data.product.epics;
       } else if (type === "initiative") {
         const data = await this.client.request<InitiativesListResponse>(listInitiativesQuery, { workspaceId, page });
-        result = data.initiatives;
+        result = data.product.initiatives;
       } else if (type === "goal") {
         const data = await this.client.request<GoalsListResponse>(listGoalsQuery, { workspaceId, page });
-        result = data.goals;
+        result = data.product.goals;
       } else {
         throw new McpError(ErrorCode.InvalidParams, `Unknown type: ${type}. Valid types: feature, epic, initiative, goal, idea`);
       }
