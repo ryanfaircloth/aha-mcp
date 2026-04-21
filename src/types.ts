@@ -35,7 +35,7 @@ export interface IdeaResponse {
 }
 
 // Regular expressions for validating reference numbers
-export const FEATURE_REF_REGEX = /^([A-Z][A-Z0-9]*)-(\d+)$/;
+export const FEATURE_REF_REGEX = /^([A-Z][A-Z0-9]*)-([A-Z]-)?(\d+)$/;
 export const REQUIREMENT_REF_REGEX = /^([A-Z][A-Z0-9]*)-(\d+)-(\d+)$/;
 export const NOTE_REF_REGEX = /^([A-Z][A-Z0-9]*)-N-(\d+)$/;
 export const IDEA_REF_REGEX = /^([A-Z][A-Z0-9]*)-I-(\d+)$/;
