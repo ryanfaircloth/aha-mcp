@@ -133,6 +133,44 @@ class AhaMcp {
             required: ["query"],
           },
         },
+        {
+          name: "list_workspaces",
+          description: "List all Aha! workspaces accessible with the current credentials",
+          inputSchema: {
+            type: "object",
+            properties: {
+              page: {
+                type: "integer",
+                description: "Page number for pagination",
+                default: 1,
+              },
+            },
+          },
+        },
+        {
+          name: "list_records",
+          description: "List Aha! records (features, epics, initiatives, goals, or ideas) in a workspace",
+          inputSchema: {
+            type: "object",
+            properties: {
+              workspaceId: {
+                type: "string",
+                description: "Workspace reference prefix (e.g., PROJ)",
+              },
+              type: {
+                type: "string",
+                description: "Type of record to list",
+                enum: ["feature", "epic", "initiative", "goal", "idea"],
+              },
+              page: {
+                type: "integer",
+                description: "Page number for pagination",
+                default: 1,
+              },
+            },
+            required: ["workspaceId", "type"],
+          },
+        },
       ],
     }));
 
@@ -145,6 +183,10 @@ class AhaMcp {
         return this.handlers.handleGetIdea(request);
       } else if (request.params.name === "search_documents") {
         return this.handlers.handleSearchDocuments(request);
+      } else if (request.params.name === "list_workspaces") {
+        return this.handlers.handleListWorkspaces(request);
+      } else if (request.params.name === "list_records") {
+        return this.handlers.handleListRecords(request);
       }
 
       throw new McpError(

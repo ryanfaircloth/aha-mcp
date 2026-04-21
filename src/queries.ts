@@ -95,3 +95,79 @@ export const searchDocumentsQuery = `
     }
   }
 `;
+
+export const listWorkspacesQuery = `
+  query ListWorkspaces($page: Int) {
+    products(page: $page) {
+      nodes {
+        id
+        referencePrefix
+        name
+      }
+      currentPage
+      totalCount
+      totalPages
+      isLastPage
+    }
+  }
+`;
+
+export const listFeaturesQuery = `
+  query ListFeatures($workspaceId: String!, $page: Int) {
+    features(filters: { workspaceId: $workspaceId }, page: $page) {
+      nodes {
+        referenceNum
+        name
+      }
+      currentPage
+      totalCount
+      totalPages
+      isLastPage
+    }
+  }
+`;
+
+export const listEpicsQuery = `
+  query ListEpics($workspaceId: String!, $page: Int) {
+    epics(filters: { workspaceId: $workspaceId }, page: $page) {
+      nodes {
+        referenceNum
+        name
+      }
+      currentPage
+      totalCount
+      totalPages
+      isLastPage
+    }
+  }
+`;
+
+export const listInitiativesQuery = `
+  query ListInitiatives($workspaceId: String!, $page: Int) {
+    initiatives(filters: { workspaceId: $workspaceId }, page: $page) {
+      nodes {
+        referenceNum
+        name
+      }
+      currentPage
+      totalCount
+      totalPages
+      isLastPage
+    }
+  }
+`;
+
+export const listGoalsQuery = `
+  query ListGoals($workspaceId: String!, $page: Int) {
+    goals(filters: { workspaceId: $workspaceId }, page: $page) {
+      nodes {
+        referenceNum
+        name
+      }
+      currentPage
+      totalCount
+      totalPages
+      isLastPage
+    }
+  }
+`;

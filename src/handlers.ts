@@ -17,6 +17,12 @@ import {
   PageResponse,
   IdeaResponse,
   SearchResponse,
+  WorkspaceListResponse,
+  FeaturesListResponse,
+  EpicsListResponse,
+  InitiativesListResponse,
+  GoalsListResponse,
+  ListRecordType,
 } from "./types.js";
 import {
   getFeatureQuery,
@@ -26,6 +32,11 @@ import {
   getRequirementQuery,
   getPageQuery,
   searchDocumentsQuery,
+  listWorkspacesQuery,
+  listFeaturesQuery,
+  listEpicsQuery,
+  listInitiativesQuery,
+  listGoalsQuery,
 } from "./queries.js";
 
 export class Handlers {
@@ -295,6 +306,87 @@ export class Handlers {
         ErrorCode.InternalError,
         `Failed to search documents: ${errorMessage}`
       );
+    }
+  }
+
+  async handleListWorkspaces(request: any) {
+    const { page } = (request.params.arguments ?? {}) as { page?: number };
+
+    try {
+      const data = await this.client.request<WorkspaceListResponse>(
+        listWorkspacesQuery,
+        { page }
+      );
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(data.products, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("API Error:", errorMessage);
+      throw new McpError(ErrorCode.InternalError, `Failed to list workspaces: ${errorMessage}`);
+    }
+  }
+
+  async handleListRecords(request: any) {
+    const { workspaceId, type, page } = request.params.arguments as {
+      workspaceId: string;
+      type: ListRecordType;
+      page?: number;
+    };
+
+    if (!workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, "workspaceId is required");
+    }
+    if (!type) {
+      throw new McpError(ErrorCode.InvalidParams, "type is required");
+    }
+
+    try {
+      if (type === "idea") {
+        const url = `https://${this.domain}.aha.io/api/v1/products/${workspaceId}/ideas${page ? `?page=${page}` : ""}`;
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`API responded with status ${response.status}`);
+        }
+        const data = await response.json();
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      let result: unknown;
+      if (type === "feature") {
+        const data = await this.client.request<FeaturesListResponse>(listFeaturesQuery, { workspaceId, page });
+        result = data.features;
+      } else if (type === "epic") {
+        const data = await this.client.request<EpicsListResponse>(listEpicsQuery, { workspaceId, page });
+        result = data.epics;
+      } else if (type === "initiative") {
+        const data = await this.client.request<InitiativesListResponse>(listInitiativesQuery, { workspaceId, page });
+        result = data.initiatives;
+      } else if (type === "goal") {
+        const data = await this.client.request<GoalsListResponse>(listGoalsQuery, { workspaceId, page });
+        result = data.goals;
+      } else {
+        throw new McpError(ErrorCode.InvalidParams, `Unknown type: ${type}. Valid types: feature, epic, initiative, goal, idea`);
+      }
+
+      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    } catch (error) {
+      if (error instanceof McpError) throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("API Error:", errorMessage);
+      throw new McpError(ErrorCode.InternalError, `Failed to list records: ${errorMessage}`);
     }
   }
 }

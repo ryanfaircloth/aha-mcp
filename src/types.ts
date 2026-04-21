@@ -71,3 +71,50 @@ export interface SearchResponse {
     isLastPage: boolean;
   };
 }
+
+export interface WorkspaceNode {
+  id: string;
+  referencePrefix: string;
+  name: string;
+}
+
+export interface WorkspaceListResponse {
+  products: {
+    nodes: WorkspaceNode[];
+    currentPage: number;
+    totalCount: number;
+    totalPages: number;
+    isLastPage: boolean;
+  };
+}
+
+export interface RecordListNode {
+  referenceNum: string;
+  name: string;
+}
+
+export interface PaginatedRecordList {
+  nodes: RecordListNode[];
+  currentPage: number;
+  totalCount: number;
+  totalPages: number;
+  isLastPage: boolean;
+}
+
+export interface FeaturesListResponse {
+  features: PaginatedRecordList;
+}
+
+export interface EpicsListResponse {
+  epics: PaginatedRecordList;
+}
+
+export interface InitiativesListResponse {
+  initiatives: PaginatedRecordList;
+}
+
+export interface GoalsListResponse {
+  goals: PaginatedRecordList;
+}
+
+export type ListRecordType = "feature" | "epic" | "initiative" | "goal" | "idea";
