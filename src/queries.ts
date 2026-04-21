@@ -28,6 +28,17 @@ export const getFeatureQuery = `
   }
 `;
 
+export const getEpicQuery = `
+  query GetEpic($id: ID!) {
+    epic(id: $id) {
+      name
+      description {
+        markdownBody
+      }
+    }
+  }
+`;
+
 export const getRequirementQuery = `
   query GetRequirement($id: ID!) {
     requirement(id: $id) {

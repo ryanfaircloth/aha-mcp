@@ -2,11 +2,13 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { GraphQLClient } from "graphql-request";
 import {
   FEATURE_REF_REGEX,
+  EPIC_REF_REGEX,
   REQUIREMENT_REF_REGEX,
   NOTE_REF_REGEX,
   IDEA_REF_REGEX,
   Record,
   FeatureResponse,
+  EpicResponse,
   RequirementResponse,
   PageResponse,
   IdeaResponse,
@@ -14,6 +16,7 @@ import {
 } from "./types.js";
 import {
   getFeatureQuery,
+  getEpicQuery,
   getRequirementQuery,
   getPageQuery,
   searchDocumentsQuery,
@@ -39,7 +42,13 @@ export class Handlers {
     try {
       let result: Record | undefined;
 
-      if (FEATURE_REF_REGEX.test(reference)) {
+      if (EPIC_REF_REGEX.test(reference)) {
+        const data = await this.client.request<EpicResponse>(
+          getEpicQuery,
+          { id: reference }
+        );
+        result = data.epic;
+      } else if (FEATURE_REF_REGEX.test(reference)) {
         const data = await this.client.request<FeatureResponse>(
           getFeatureQuery,
           {
